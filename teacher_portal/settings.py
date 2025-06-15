@@ -25,7 +25,13 @@ SECRET_KEY = 'django-insecure-zaapnu)^*m4vhi&6m#be-sioyme8=-!$6q!*sy7a#al+=3!-to
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
 
-ALLOWED_HOSTS = []
+ALLOWED_HOSTS = ['teacher-bpae.onrender.com','localhost','127.0.0.1']
+
+CSRF_TRUSTED_ORIGINS = [
+    'https://teacher-bpae.onrender.com/',
+   'http://127.0.0.1:8000/'
+   
+]
 
 
 # Application definition
