@@ -8,47 +8,59 @@ Live Demo: [https://teacher-bpae.onrender.com/](https://teacher-bpae.onrender.co
 
 
 
-## Run Locally
+## What updated
 
-### 1. Clone the Repository
+### Updated model.py
 
-```bash
-git clone https://github.com/rajatrawal/teacher.git
-cd teacher
+```python
+class Student(models.Model):
+    # Added unique must be true so that there will not be any duplicate student at model level
+    name = models.CharField(max_length=100, unique=True)
+
+
+class StudentMark(models.Model):
+    student = models.ForeignKey(Student, on_delete=models.CASCADE)
+    subject = models.CharField(max_length=100)
+    marks = models.PositiveIntegerField(validators=[MaxValueValidator(100)])
+
+    # this ensure that there will be only one model of same studen and same subject at model level
+    class Meta:
+        constraints = [
+            models.UniqueConstraint(
+                fields=['student', 'subject'], name='unique_student_subject')
+        ]
 ````
 
-### 2. Create Virtual Environment & Install Requirements
 
-```bash
-python -m venv venv
-source venv/bin/activate  # On Windows: venv\Scripts\activate
-pip install -r requirements.txt
+### 2. Add student logic
+
+```python
+def add_student(request):
+    if request.method == 'POST':
+        name = request.POST.get('name')
+        subject = request.POST.get('subject')
+        marks = int(request.POST.get('marks'))
+       
+        student, isStudentCreated = Student.objects.get_or_create(name=name)
+
+        student_mark = StudentMark.objects.filter(student=student, subject=subject).first()
+        if student_mark:
+                student_mark.marks += marks
+        else:
+                student_mark = StudentMark(student=student,subject=subject,marks=marks)
+
+        
+        try:
+            student_mark.full_clean()
+            student_mark.save()
+        except ValidationError as e:
+            print(e)
+            
+            return redirect('dashboard')
+
+        return redirect('dashboard')
+
+    return redirect('dashboard')
 ```
 
-### 3. Run Migrations
-
-```bash
-python manage.py migrate
-```
-
-
-### 5. Start Development Server
-
-```bash
-python manage.py runserver
-```
-
-Open `http://127.0.0.1:8000/` in  browser.
-
----
-
-
-
-## Testing
-
-```bash
-python manage.py test
-```
-
-
-
+in add student handled MaxValueValidator, it is not working because it is used in django forms and rest framework here they are validated by default but django save() method don't do any custom validation so there is full_clean() method for validation
